@@ -16,7 +16,7 @@ namespace TwenstyFirstJan
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Search_Screen());
+            Application.Run(new Form1());
         }
     }
 }
