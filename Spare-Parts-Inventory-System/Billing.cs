@@ -27,7 +27,7 @@ namespace TwenstyFirstJan
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-
+            total_price();
         }
 
         private void invoicenum()
@@ -39,14 +39,23 @@ namespace TwenstyFirstJan
                 string sqlquery1 = "select max(invoice)+1 from log_table;";
                 sqlconn1.Open();
                 SqlCommand sqlcomm1 = new SqlCommand(sqlquery1, sqlconn1);
-                object result = sqlcomm1.ExecuteScalar();
-                int value = (int)result;
+                int result =(int) sqlcomm1.ExecuteScalar();
+
+                int value;
+                if (result < 1){
+                    value = 1;
+                }
+                else
+                {
+                    value = (int)result;
+                }
                 textBox2.Text = value.ToString();
+
                 sqlconn1.Close();
             }
-            catch
+            catch(Exception ex)
             {
-                MessageBox.Show("Retry");
+                MessageBox.Show("Retry ");
             }
         }
 
@@ -58,7 +67,9 @@ namespace TwenstyFirstJan
                 invoicenum();
                 string mainconn = ConfigurationManager.ConnectionStrings["myCONN"].ConnectionString;
                 SqlConnection sqlconn = new SqlConnection(mainconn);
-                string sqlquery = "select p.companyName as 'Company' , p.partName as 'Part Name', p.modelName as 'Model Name' , t.price as 'Price' , t.quantity as 'Quantity' from [dbo].[product_table] p , [dbo].[temporary_table] t where p.productId=t.Id; ";
+                string sqlquery = "select p.companyName as 'Company' , p.partName as 'Part Name', p.modelName as 'Model Name'" +
+                    " , t.price as 'Price' , t.quantity as 'Quantity' from [dbo].[product_table] p , [dbo].[temporary_table] t " +
+                    "where p.productId=t.Id; ";
                 sqlconn.Open();
                 SqlCommand sqlcomm = new SqlCommand(sqlquery, sqlconn);
                 SqlDataAdapter sdr = new SqlDataAdapter(sqlcomm);
@@ -67,13 +78,21 @@ namespace TwenstyFirstJan
                 dataGridView1.DataSource = dt;
                 textBox5.Text = "0334-3669215";
 
-                textBox6.Text = (from DataGridViewRow row in dataGridView1.Rows where row.Cells[3].FormattedValue.ToString() != string.Empty select Convert.ToInt32(row.Cells[3].FormattedValue)).Sum().ToString();
+                total_price();
+                // toint32 ko todouble
+               
                 sqlconn.Close();
             }
-            catch
+            catch(Exception e)
             {
                 MessageBox.Show("Retry");
             }
+        }
+
+        private void total_price()
+        {
+             textBox6.Text = (from DataGridViewRow row in dataGridView1.Rows where row.Cells[3].FormattedValue.ToString() 
+                                 != string.Empty select Convert.ToDouble(row.Cells[3].FormattedValue)).Sum().ToString();
         }
 
         private void Billing_Load(object sender, EventArgs e)
@@ -143,7 +162,7 @@ namespace TwenstyFirstJan
             }
             catch
             {
-                MessageBox.Show("Retry");
+                MessageBox.Show("Retry ");
             }
             //dataGridView1.DataSource = null;
         }
@@ -157,7 +176,10 @@ namespace TwenstyFirstJan
                 SqlConnection con;
                 con = new SqlConnection(@"Server=tcp:masamual.database.windows.net,1433;Initial Catalog=alidb;Persist Security Info=False;User ID=ali;Password=Adminaccount@101;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
                 con.Open();
-                cmd = new SqlCommand("UPDATE product_table  SET  stock_quantity = stock_quantity - e.quantity FROM   temporary_table as e WHERE  e.Id = product_table.productId; insert into log_table(Id,sold_quantity,sold_price,customer_name,customer_address,invoice,sold_date)  select Id, quantity,price,@cust,@addr,@inv, @date from temporary_table; delete temporary_table;", con);
+                cmd = new SqlCommand("UPDATE product_table  SET  stock_quantity = stock_quantity - e.quantity FROM  " +
+                    " temporary_table as e WHERE  e.Id = product_table.productId; insert into log_table(Id,sold_quantity,sold_price" +
+                    ",customer_name,customer_address,invoice,sold_date)  select Id, quantity,price,@cust,@addr,@inv, @date" +
+                    " from temporary_table; delete temporary_table;", con);
                 cmd.Parameters.AddWithValue("@cust", textBox1.Text.ToString());
                 cmd.Parameters.AddWithValue("@addr", textBox3.Text.ToString());
                 int invval = int.Parse(textBox2.Text);
@@ -178,7 +200,7 @@ namespace TwenstyFirstJan
             }
             catch
             {
-                MessageBox.Show("Retry");
+                MessageBox.Show("Retry ");
             }
         }
 
@@ -192,6 +214,7 @@ namespace TwenstyFirstJan
         Bitmap bitmap;
         private void button3_Click(object sender, EventArgs e)
         {
+            dataGridView1.ClearSelection();
             this.SendToBack();
             printPreviewDialog1.Document = printDocument1;
             //printPreviewDialog1.ShowDialog();
@@ -199,7 +222,7 @@ namespace TwenstyFirstJan
             int height = dataGridView1.Height;
             dataGridView1.Height =37+(dataGridView1.RowCount+2) * dataGridView1.RowTemplate.Height * 4;
             bitmap = new Bitmap(dataGridView1.Width, dataGridView1.Height);
-            dataGridView1.DrawToBitmap(bitmap, new Rectangle(0,150 , dataGridView1.Width, dataGridView1.Height));
+            dataGridView1.DrawToBitmap(bitmap, new Rectangle(0,120 , dataGridView1.Width, dataGridView1.Height));
             printPreviewDialog1.PrintPreviewControl.Zoom = 1;
             printPreviewDialog1.ShowDialog();
             dataGridView1.Height = height;
@@ -209,26 +232,28 @@ namespace TwenstyFirstJan
 
         private void printDocument1_PrintPage(object sender, System.Drawing.Printing.PrintPageEventArgs e)
         {
-            
-            
-            e.Graphics.DrawImage(bitmap,25,190 );
+            e.Graphics.DrawImage(bitmap,25,180 );
 
             Bitmap bmp = Properties.Resources.Capture;
             Image newImage= bmp;
             e.Graphics.DrawImage(newImage, 25, 25, newImage.Width, newImage.Height);
             e.Graphics.DrawString("Customer Name:  " + textBox1.Text, new Font ("Arial", 12 ,FontStyle.Regular),Brushes.Black, new Point(25, 180));
-            e.Graphics.DrawString("Date:                       " + DateTime. Now, new Font ("Arial", 12), Brushes.Black, new Point (25, 200));
+            e.Graphics.DrawString("Date:                      " + DateTime. Now, new Font ("Arial", 12), Brushes.Black, new Point (25, 200));
             e.Graphics.DrawString("Address:                 " + textBox3.Text, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(25, 220));
             e.Graphics.DrawString("Invoice No:            " + textBox2.Text, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(25, 240));
             e.Graphics.DrawString("Contact No:           " + textBox5.Text, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(25, 260));
             e.Graphics.DrawString("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ", new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(50, 280));
 
+            // ali sameed muneeba maheen
             //      e.Graphics.DrawString(DashLabel.Text, new Font("Arial", 12), Brushes.Black, new Point(25, 280));
             //    e.Graphics.DrawString(DashLabel.Text, new Font("Arial", 12), Brushes.Black, new Point(25, 600));
-            e.Graphics.DrawString("Total Amount:  " + textBox6.Text, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(500, 1000));
+            e.Graphics.DrawString("Total Amount:  " + textBox6.Text+"/-", new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(500, 1000));
             e.Graphics.DrawString("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ", new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(50, 980));
-      //      e.Graphics.DrawString(Signature.Text, new Font("Arial", 12), Brushes.Black, new Point(25, 630));
-       //     e.Graphics.DrawString(DashLabel.Text, new Font("Arial", 12), Brushes.Black, new Point(25, 650));
+            e.Graphics.DrawString("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ", new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(50, 1015));
+            e.Graphics.DrawString("-----S.A.M.M. Soft Devs------   Contact: 0310-2606951;  0331-2652818", new Font("Arial", 9, FontStyle.Regular), Brushes.Black, new Point(190, 1030));
+
+            //      e.Graphics.DrawString(Signature.Text, new Font("Arial", 12), Brushes.Black, new Point(25, 630));
+            //     e.Graphics.DrawString(DashLabel.Text, new Font("Arial", 12), Brushes.Black, new Point(25, 650));
         }
 
         private void DashLabel_Click(object sender, EventArgs e)

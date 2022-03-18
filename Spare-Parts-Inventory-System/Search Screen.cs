@@ -36,7 +36,11 @@ namespace TwenstyFirstJan
             {
                 string mainconn = ConfigurationManager.ConnectionStrings["myCONN"].ConnectionString;
                 SqlConnection sqlconn = new SqlConnection(mainconn);
-                string sqlquery = "select productId as 'Product ID',companyName as 'Company Name', partName as 'Part Name', modelName as 'Model Name', stock_quantity as 'Quantity left in Stock', price as 'Price Rs.', rack as 'Rack Number'  from product_table where companyName like '%" + companytextbox.Text.ToString().ToLower() + "%' and partName like '%" + partnametextbox.Text.ToString().ToLower() + "%' and modelName like '%" + modelno.Text.ToString().ToLower() + "%'";
+                string sqlquery = "select productId as 'Product ID',companyName as 'Company Name', partName as 'Part Name'," +
+                    " modelName as 'Model Name', stock_quantity as 'Quantity left in Stock', price as 'Price Rs.', rack as" +
+                    " 'Rack Number'  from product_table where companyName like '%" + companytextbox.Text.ToString().ToLower() + 
+                    "%' and partName like '%" + partnametextbox.Text.ToString().ToLower() + "%' and modelName like '%"
+                    + modelno.Text.ToString().ToLower() + "%'";
                 sqlconn.Open();
                 SqlCommand sqlcomm = new SqlCommand(sqlquery, sqlconn);
                 SqlDataAdapter sdr = new SqlDataAdapter(sqlcomm);
@@ -81,16 +85,47 @@ namespace TwenstyFirstJan
 
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            DForm f2 = new NewFolder1.DForm();
-            f2.textBox1.Text = this.dataGridView1.CurrentRow.Cells[5].Value.ToString();
-            f2.textBox6.Text = this.dataGridView1.CurrentRow.Cells[4].Value.ToString();
-            f2.textBox3.Text = this.dataGridView1.CurrentRow.Cells[1].Value.ToString();
-            f2.textBox4.Text = this.dataGridView1.CurrentRow.Cells[2].Value.ToString();
-            f2.textBox5.Text = this.dataGridView1.CurrentRow.Cells[0].Value.ToString();
-            f2.textBox7.Text = this.dataGridView1.CurrentRow.Cells[3].Value.ToString();
 
-            f2.Show();
-            f2.textBox2.Focus();
+            try
+            {
+                string mainconn = ConfigurationManager.ConnectionStrings["myCONN"].ConnectionString;
+                SqlConnection sqlconn1 = new SqlConnection(mainconn);
+                string sqlquery1 = "select count(Id) from temporary_table;";
+                sqlconn1.Open();
+                SqlCommand sqlcomm1 = new SqlCommand(sqlquery1, sqlconn1);
+                int result = (int)sqlcomm1.ExecuteScalar();
+                
+                if (result > 28)
+                {
+
+                    MessageBox.Show("Bill is full !");
+                    //overbilllimit
+                }
+                else
+                {
+                    DForm f2 = new NewFolder1.DForm();
+                    f2.textBox1.Text = this.dataGridView1.CurrentRow.Cells[5].Value.ToString();
+                    f2.textBox6.Text = this.dataGridView1.CurrentRow.Cells[4].Value.ToString();
+                    f2.textBox3.Text = this.dataGridView1.CurrentRow.Cells[1].Value.ToString();
+                    f2.textBox4.Text = this.dataGridView1.CurrentRow.Cells[2].Value.ToString();
+                    f2.textBox5.Text = this.dataGridView1.CurrentRow.Cells[0].Value.ToString();
+                    f2.textBox7.Text = this.dataGridView1.CurrentRow.Cells[3].Value.ToString();
+
+                    f2.Show();
+                    f2.textBox2.Focus();
+                }
+
+                sqlconn1.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Retry ");
+            }
+            
+
+
+
+           
             //this.Hide();
         }
 
